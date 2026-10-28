@@ -9,24 +9,24 @@
 #include <esp_heap_caps.h>
 
 // =====================================================
-// CONFIGURAZIONE HARDWARE
+// HARDWARE CONFIGURATION
 // =====================================================
 #define GPS_RX_PIN       16
 #define GPS_TX_PIN       17
 #define TM1637_CLK_PIN   18
 #define TM1637_DIO_PIN   19
 
-// LED RGB catodo comune
+// Common-cathode RGB LED
 #define RGB_R_PIN        25
 #define RGB_G_PIN        26
 #define RGB_B_PIN        27
 #define RGB_PWM_FREQ     5000
 #define RGB_PWM_RES      8
 
-// Timezone Italia con ora legale automatica
+// Italian time zone with automatic daylight saving time (change TZ_ITALY for your country)
 static const char* TZ_ITALY = "CET-1CEST,M3.5.0/2,M10.5.0/3";
 
-const char* AP_SSID = "TachimetroGPS";
+const char* AP_SSID = "GPS-Speedometer";
 const char* AP_PASS = "12345678";
 
 IPAddress apIP(192, 168, 4, 1);
@@ -46,14 +46,14 @@ static const uint32_t FLASH_TRIM_INTERVAL_MS = 60000;
 static const size_t FLASH_MAX_LINES = 10080;
 static const int TRANSITION_MINUTES = 45;
 
-// default profili
+// profile defaults
 static const float DEFAULT_DAY_RGB_BRIGHTNESS   = 0.10f;
 static const float DEFAULT_NIGHT_RGB_BRIGHTNESS = 0.02f;
 static const uint8_t DEFAULT_DAY_DISPLAY_BRIGHTNESS   = 5;
 static const uint8_t DEFAULT_NIGHT_DISPLAY_BRIGHTNESS = 1;
 
 // =====================================================
-// OGGETTI
+// OBJECTS
 // =====================================================
 HardwareSerial GPSSerial(2);
 TinyGPSPlus gps;
@@ -61,7 +61,7 @@ WebServer server(80);
 TM1637Display display(TM1637_CLK_PIN, TM1637_DIO_PIN);
 
 // =====================================================
-// STRUTTURE DATI
+// DATA STRUCTURES
 // =====================================================
 struct RawPoint {
   uint32_t ts;
@@ -89,7 +89,7 @@ struct UserSettings {
 };
 
 // =====================================================
-// BUFFER STORICO
+// HISTORY BUFFERS
 // =====================================================
 RawPoint* rawHistory = nullptr;
 MinutePoint* minuteHistory = nullptr;
@@ -103,7 +103,7 @@ size_t minuteHead = 0;
 bool minuteWrapped = false;
 
 // =====================================================
-// STATO
+// STATE
 // =====================================================
 float currentSpeed = 0.0f;
 float filteredSpeed = 0.0f;
@@ -149,7 +149,7 @@ bool isDayProfile = true;
 int sunriseLocalMin = -1;
 int sunsetLocalMin  = -1;
 int currentLocalMinutes = -1;
-String profileName = "giorno";
+String profileName = "day";
 String sunriseStr = "--:--";
 String sunsetStr  = "--:--";
 
@@ -158,11 +158,11 @@ String sunsetStr  = "--:--";
 // =====================================================
 const char INDEX_HTML[] PROGMEM = R"rawliteral(
 <!DOCTYPE html>
-<html lang="it">
+<html lang="en">
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1">
-<title>Tachimetro GPS ESP32</title>
+<title>ESP32 GPS Speedometer</title>
 <style>
 :root{
   --bg:#08101c; --bg2:#0f1a2f; --panel:#121c30; --panel2:#182640; --text:#edf3ff;
@@ -216,10 +216,10 @@ input[type=range]{width:100%}
 <div class="wrap">
   <div class="top">
     <div>
-      <div class="title">Tachimetro GPS ESP32</div>
-      <div class="sub">Profili giorno/notte automatici da GPS, storico persistente e LED RGB gradiente</div>
+      <div class="title">ESP32 GPS Speedometer</div>
+      <div class="sub">Automatic day/night profiles from GPS, persistent history and RGB gradient LED</div>
     </div>
-    <div id="fixPill" class="pill bad"><span class="dot"></span><span>GPS non fixato</span></div>
+    <div id="fixPill" class="pill bad"><span class="dot"></span><span>No GPS fix</span></div>
   </div>
 
   <div class="grid">
@@ -229,66 +229,66 @@ input[type=range]{width:100%}
         <div class="unit">km/h</div>
       </div>
       <div class="meta">
-        <div class="mini"><div class="k">Satelliti</div><div class="v" id="sats">0</div></div>
+        <div class="mini"><div class="k">Satellites</div><div class="v" id="sats">0</div></div>
         <div class="mini"><div class="k">HDOP</div><div class="v" id="hdop">--</div></div>
-        <div class="mini"><div class="k">Massima oggi</div><div class="v" id="max">0.0</div></div>
-        <div class="mini"><div class="k">Media oggi</div><div class="v" id="avg">0.0</div></div>
+        <div class="mini"><div class="k">Max today</div><div class="v" id="max">0.0</div></div>
+        <div class="mini"><div class="k">Average today</div><div class="v" id="avg">0.0</div></div>
       </div>
     </div>
 
     <div class="card status">
-      <div class="mini"><div class="k">Ora locale</div><div class="v" id="gpsTime">--:--:--</div></div>
-      <div class="mini"><div class="k">Profilo</div><div class="v" id="profile">--</div></div>
-      <div class="mini"><div class="k">Alba</div><div class="v" id="sunrise">--:--</div></div>
-      <div class="mini"><div class="k">Tramonto</div><div class="v" id="sunset">--:--</div></div>
+      <div class="mini"><div class="k">Local time</div><div class="v" id="gpsTime">--:--:--</div></div>
+      <div class="mini"><div class="k">Profile</div><div class="v" id="profile">--</div></div>
+      <div class="mini"><div class="k">Sunrise</div><div class="v" id="sunrise">--:--</div></div>
+      <div class="mini"><div class="k">Sunset</div><div class="v" id="sunset">--:--</div></div>
       <div class="mini"><div class="k">Display</div><div class="v" id="dispBri">0</div></div>
       <div class="mini"><div class="k">LED RGB</div><div class="split"><div class="v" id="rgbText">0,0,255</div><div class="swatch" id="rgbSwatch"></div></div></div>
     </div>
 
     <div class="card chartCard">
       <div class="split" style="margin-bottom:10px">
-        <div style="font-weight:800">Velocità media e picco per minuto</div>
+        <div style="font-weight:800">Average and peak speed per minute</div>
         <div class="toolbar">
-          <span class="tag">24h RAM + storico flash</span>
-          <button onclick="loadHistory()">Aggiorna</button>
-          <button class="ghost" onclick="downloadCSV()">Scarica CSV</button>
+          <span class="tag">24h RAM + flash history</span>
+          <button onclick="loadHistory()">Refresh</button>
+          <button class="ghost" onclick="downloadCSV()">Download CSV</button>
         </div>
       </div>
       <canvas id="chart" width="1100" height="360"></canvas>
-      <div class="footer">LED RGB: blu 0 · verde 50 · giallo 90 · rosso 130+ km/h. Profili luminosità automatici con alba/tramonto.</div>
+      <div class="footer">RGB LED: blue 0 · green 50 · yellow 90 · red 130+ km/h. Automatic brightness profiles based on sunrise/sunset.</div>
     </div>
 
     <div class="sidePanel">
       <div class="card">
         <div class="split" style="margin-bottom:10px">
-          <div style="font-weight:800">Impostazioni giorno / notte</div>
-          <button onclick="saveSettings()">Salva</button>
+          <div style="font-weight:800">Day / night settings</div>
+          <button onclick="saveSettings()">Save</button>
         </div>
         <div class="formgrid">
           <div>
-            <label>Luminosità LED giorno <span id="dayLedVal"></span></label>
+            <label>Day LED brightness <span id="dayLedVal"></span></label>
             <input id="dayLed" type="range" min="0.01" max="0.25" step="0.01">
           </div>
           <div>
-            <label>Luminosità display giorno <span id="dayDispVal"></span></label>
+            <label>Day display brightness <span id="dayDispVal"></span></label>
             <input id="dayDisp" type="range" min="0" max="7" step="1">
           </div>
           <div>
-            <label>Luminosità LED notte <span id="nightLedVal"></span></label>
+            <label>Night LED brightness <span id="nightLedVal"></span></label>
             <input id="nightLed" type="range" min="0.01" max="0.25" step="0.01">
           </div>
           <div>
-            <label>Luminosità display notte <span id="nightDispVal"></span></label>
+            <label>Night display brightness <span id="nightDispVal"></span></label>
             <input id="nightDisp" type="range" min="0" max="7" step="1">
           </div>
         </div>
-        <div class="small" style="margin-top:10px">Le impostazioni sono memorizzate su flash. Il profilo attivo cambia automaticamente in base ad alba e tramonto calcolati localmente dal GPS.</div>
+        <div class="small" style="margin-top:10px">Settings are stored in flash. The active profile changes automatically based on sunrise and sunset, calculated locally from the GPS position.</div>
       </div>
 
       <div class="card">
         <div class="split" style="margin-bottom:10px">
-          <div style="font-weight:800">Storico recente</div>
-          <button class="ghost" onclick="clearHistory()">Azzera storico</button>
+          <div style="font-weight:800">Recent history</div>
+          <button class="ghost" onclick="clearHistory()">Clear history</button>
         </div>
         <div id="historyList" class="list"></div>
       </div>
@@ -307,7 +307,7 @@ function fmt2(v){ return Number(v || 0).toFixed(2); }
 function fmtTime(ts){
   if(!ts) return '--:--';
   const d = new Date(ts * 1000);
-  return d.toLocaleTimeString('it-IT', {hour:'2-digit', minute:'2-digit'});
+  return d.toLocaleTimeString([], {hour:'2-digit', minute:'2-digit'});
 }
 function updateLabels(){
   $('dayLedVal').textContent = fmt2($('dayLed').value);
@@ -335,7 +335,7 @@ function drawChart(data){
     ctx.fillText(String((maxV - (maxV/5)*i).toFixed(0)), 12, y+4);
   }
   const n = data.length;
-  if(n < 2){ ctx.fillStyle='#9db0d1'; ctx.fillText('Storico insufficiente', left+20, top+30); return; }
+  if(n < 2){ ctx.fillStyle='#9db0d1'; ctx.fillText('Not enough history', left+20, top+30); return; }
   const xOf = i => left + (i/(n-1))*pw;
   const yOf = v => top + ph - (Math.min(v,maxV)/maxV)*ph;
   const steps = Math.min(6, n-1);
@@ -354,8 +354,8 @@ function drawChart(data){
 function drawList(data){
   const el = $('historyList');
   const last = data.slice(-18).reverse();
-  if(!last.length){ el.innerHTML = '<div class="row"><span>--</span><b>Nessun dato</b><span>Attendi il fix GPS</span></div>'; return; }
-  el.innerHTML = last.map(p => `<div class="row"><span>${fmtTime(p.ts)}</span><b>${fmt1(p.avg)} km/h</b><span>picco ${fmt1(p.max)}</span></div>`).join('');
+  if(!last.length){ el.innerHTML = '<div class="row"><span>--</span><b>No data</b><span>Wait for the GPS fix</span></div>'; return; }
+  el.innerHTML = last.map(p => `<div class="row"><span>${fmtTime(p.ts)}</span><b>${fmt1(p.avg)} km/h</b><span>peak ${fmt1(p.max)}</span></div>`).join('');
 }
 
 async function loadLive(){
@@ -374,8 +374,8 @@ async function loadLive(){
   $('rgbText').textContent = `${j.rgb.r},${j.rgb.g},${j.rgb.b}`;
   $('rgbSwatch').style.background = `rgb(${j.rgb.r},${j.rgb.g},${j.rgb.b})`;
   const pill = $('fixPill');
-  if(j.fix){ pill.className='pill ok'; pill.innerHTML='<span class="dot"></span><span>GPS fix valido</span>'; }
-  else { pill.className='pill bad'; pill.innerHTML='<span class="dot"></span><span>GPS non fixato</span>'; }
+  if(j.fix){ pill.className='pill ok'; pill.innerHTML='<span class="dot"></span><span>GPS fix OK</span>'; }
+  else { pill.className='pill bad'; pill.innerHTML='<span class="dot"></span><span>No GPS fix</span>'; }
 }
 
 async function loadHistory(){
@@ -409,14 +409,14 @@ async function saveSettings(){
     body: JSON.stringify(payload)
   });
   const j = await r.json();
-  if(!j.ok) alert('Errore salvataggio');
+  if(!j.ok) alert('Error while saving');
   await loadLive();
 }
 
 function downloadCSV(){ window.location = '/api/history.csv'; }
 
 async function clearHistory(){
-  if(!confirm('Vuoi cancellare lo storico salvato in RAM e flash?')) return;
+  if(!confirm('Delete the history stored in RAM and flash?')) return;
   await fetch('/api/history/clear', {method:'POST'});
   await loadHistory();
 }
@@ -524,12 +524,12 @@ int dayOfYearFromDate(int year, int month, int day) {
 }
 
 // =====================================================
-// CALCOLO ALBA/TRAMONTO LOCALE SENZA LIBRERIA ESTERNA
-// Formula NOAA semplificata
-// restituisce minuti UTC da mezzanotte o -1 se non valido
+// LOCAL SUNRISE/SUNSET CALCULATION WITHOUT AN EXTERNAL LIBRARY
+// Simplified NOAA formula
+// returns UTC minutes from midnight, or -1 if not valid
 // =====================================================
 int calcSunUtcMinutes(bool sunrise, int year, int month, int day, double latitude, double longitude) {
-  const double zenith = 90.833; // alba/tramonto civile standard
+  const double zenith = 90.833; // standard sunrise/sunset zenith
   const double D2R = M_PI / 180.0;
   const double R2D = 180.0 / M_PI;
 
@@ -725,7 +725,7 @@ void showSpeed(float kmh, bool valid) {
 }
 
 // =====================================================
-// STORICO
+// HISTORY
 // =====================================================
 size_t rawCount() { return rawWrapped ? rawCapacity : rawHead; }
 size_t minuteCount() { return minuteWrapped ? minuteCapacity : minuteHead; }
@@ -855,12 +855,12 @@ void addMinuteSample(uint32_t ts, float kmh) {
 }
 
 // =====================================================
-// PROFILO GIORNO / NOTTE
+// DAY / NIGHT PROFILE
 // =====================================================
 float profileBlendWeight() {
   if (currentLocalMinutes < 0 || sunriseLocalMin < 0 || sunsetLocalMin < 0) {
     isDayProfile = true;
-    profileName = "giorno";
+    profileName = "day";
     return 1.0f;
   }
 
@@ -871,29 +871,29 @@ float profileBlendWeight() {
 
   if (now < sr - trans || now >= ss + trans) {
     isDayProfile = false;
-    profileName = "notte";
+    profileName = "night";
     return 0.0f;
   }
   if (now >= sr + trans && now < ss - trans) {
     isDayProfile = true;
-    profileName = "giorno";
+    profileName = "day";
     return 1.0f;
   }
   if (now >= sr - trans && now < sr + trans) {
     float t = (float)(now - (sr - trans)) / (2.0f * trans);
-    profileName = "alba";
+    profileName = "sunrise";
     isDayProfile = true;
     return clampf(t, 0.0f, 1.0f);
   }
   if (now >= ss - trans && now < ss + trans) {
     float t = 1.0f - (float)(now - (ss - trans)) / (2.0f * trans);
-    profileName = "tramonto";
+    profileName = "sunset";
     isDayProfile = t >= 0.5f;
     return clampf(t, 0.0f, 1.0f);
   }
 
   isDayProfile = true;
-  profileName = "giorno";
+  profileName = "day";
   return 1.0f;
 }
 
@@ -1052,7 +1052,7 @@ void handleHistory() {
 void handleHistoryCSV() {
   File f = LittleFS.open(HISTORY_FILE, "r");
   if (!f) {
-    server.send(404, "text/plain", "Storico non disponibile");
+    server.send(404, "text/plain", "History not available");
     return;
   }
 
@@ -1088,14 +1088,14 @@ void handleSettingsGet() {
 
 void handleSettingsPost() {
   if (!server.hasArg("plain")) {
-    server.send(400, "application/json", "{\"ok\":false,\"error\":\"body mancante\"}");
+    server.send(400, "application/json", "{\"ok\":false,\"error\":\"missing body\"}");
     return;
   }
 
   JsonDocument doc;
   DeserializationError err = deserializeJson(doc, server.arg("plain"));
   if (err) {
-    server.send(400, "application/json", "{\"ok\":false,\"error\":\"json non valido\"}");
+    server.send(400, "application/json", "{\"ok\":false,\"error\":\"invalid json\"}");
     return;
   }
 
@@ -1130,7 +1130,7 @@ void setupAP() {
 }
 
 // =====================================================
-// MEMORIA
+// MEMORY
 // =====================================================
 void setupHistoryBuffers() {
   rawCapacity = HISTORY_HOURS_RAM * 3600UL;
@@ -1161,7 +1161,7 @@ void setup() {
   setupItalyTimeZone();
 
   if (!LittleFS.begin(true)) {
-    Serial.println("Errore LittleFS");
+    Serial.println("LittleFS error");
   }
 
   loadSettingsFromFlash();
@@ -1185,7 +1185,7 @@ void setup() {
   setupWeb();
 
   Serial.println();
-  Serial.println("=== TACHIMETRO GPS ESP32 DAY/NIGHT ===");
+  Serial.println("=== ESP32 GPS SPEEDOMETER DAY/NIGHT ===");
   Serial.print("SSID AP: "); Serial.println(AP_SSID);
   Serial.print("PASS AP: "); Serial.println(AP_PASS);
   Serial.print("IP AP  : "); Serial.println(WiFi.softAPIP());

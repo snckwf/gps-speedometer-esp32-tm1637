@@ -1,62 +1,55 @@
-# Tachimetro GPS ESP32 con TM1637, LED RGB e luminosità automatica giorno/notte
+# ESP32 GPS speedometer with TM1637, RGB LED and automatic day/night brightness
 
-> 📖 **Articolo completo con schema, foto e spiegazioni passo passo:**  
-> **[Tachimetro GPS ESP32 con TM1637, LED RGB e luminosità automatica giorno/notte – www.emgi.it](https://www.emgi.it/2026/04/10/tachimetro-gps-di-precisione/)**
+> 📖 **Full article with wiring diagram, photos and step-by-step explanations (in Italian):**  
+> **[ESP32 GPS speedometer with TM1637, RGB LED and automatic day/night brightness – www.emgi.it](https://www.emgi.it/2026/04/10/tachimetro-gps-di-precisione/)**
 >
-> Altri progetti di elettronica, Arduino, ESP32, Home Assistant e stampa 3D su **[www.emgi.it](https://www.emgi.it)**
+> More electronics, Arduino, ESP32, Home Assistant and 3D printing projects at **[www.emgi.it](https://www.emgi.it)**
 
-![Tachimetro GPS ESP32 con TM1637, LED RGB e luminosità automatica giorno/notte](immagini/copertina-3d.jpg)
+![ESP32 GPS speedometer with TM1637, RGB LED and automatic day/night brightness](images/cover-3d.jpg)
 
-Realizzare un tachimetro GPS fai da te è un progetto molto interessante perché unisce elettronica, programmazione, interfaccia web e stampa 3D in un unico dispositivo compatto. In questa versione finale ho realizzato un **tachimetro GPS basato su ESP32** capace di visualizzare la velocità in tempo reale su un display **TM1637 a 4 cifre**, salvare uno **storico persistente in flash**, mostrare una **pagina web professionale via Access Point Wi-Fi**, pilotare un **LED RGB a gradiente** che cambia colore in base alla velocità e regolare automaticamente la **luminosità giorno/notte** in base ad alba e tramonto calcolati localmente tramite GPS.
+Building a DIY GPS speedometer is a very interesting project because it combines electronics, programming, a web interface and 3D printing in one compact device. In this final version I built an **ESP32-based GPS speedometer** that shows the speed in real time on a **4-digit TM1637** display, keeps a **persistent history in flash**, serves a **polished web page over a Wi-Fi access point**, drives a **gradient RGB LED** whose colour changes with speed, and automatically adjusts **day/night brightness** based on sunrise and sunset calculated locally from the GPS position.
 
-Il sistema utilizza il modulo **GY-NEO6MV2** per ricavare la velocità dal segnale GPS, un **ESP32 Dev Module** per la gestione generale del progetto e un display **TM1637 0,36″** per mostrare tre cifre intere e una decimale, ad esempio **53.3 km/h** oppure **123.4 km/h**.
+The system uses a **GY-NEO6MV2** module to get the speed from the GPS signal, an **ESP32 Dev Module** to run everything and a **0.36″ TM1637** display that shows three integer digits and one decimal, e.g. **53.3 km/h** or **123.4 km/h**.
 
-## Caratteristiche principali
+## Main features
 
-Questo tachimetro offre diverse funzioni utili:
+- speed shown in **km/h** with one decimal place
+- speed read from **GPS**
+- **TM1637 4-digit** display
+- correct display format, e.g. **53.3** and not **5.3.3**
+- **polished web page** hosted directly on the ESP32
+- runs as a **Wi-Fi access point**
+- **live telemetry** with speed, satellites, HDOP, average and maximum
+- **history chart** of average and peak speed
+- **history stored in flash** with **LittleFS**
+- history export to **CSV**
+- **common-cathode RGB LED** with a smooth colour transition depending on speed
+- **automatic day/night brightness profiles** based on sunrise and sunset
+- RGB LED and display brightness adjustable from the web page
+- settings stored permanently in flash
 
-- visualizzazione della velocità in **km/h** con una cifra decimale
-- lettura della velocità da **GPS**
-- display **TM1637 4 digit**
-- formato corretto sul display, ad esempio **53.3** e non **5.3.3**
-- **pagina web premium** ospitata direttamente sull’ESP32
-- funzionamento in modalità **Access Point Wi-Fi**
-- **telemetria live** con velocità, satelliti, HDOP, media e massima
-- **grafico storico** della velocità media e di picco
-- salvataggio dello **storico in flash** tramite **LittleFS**
-- esportazione dello storico in **CSV**
-- **LED RGB a catodo comune** con transizione colore graduale in funzione della velocità
-- **profili luminosità giorno/notte automatici** basati su alba e tramonto
-- regolazione da web della luminosità del **LED RGB** e del **display**
-- memorizzazione permanente delle impostazioni in flash
-- **case OpenSCAD modulare** con esportazione dei singoli pezzi in STL
-
-## Componenti utilizzati
-
-Per realizzare il progetto servono:
+## Parts used
 
 - 1 × **ESP32 Dev Module**
-- 1 × **modulo GPS GY-NEO6MV2**
-- 1 × **display TM1637 4 digit 0,36″**
-- 1 × **LED RGB a catodo comune**
-- 3 × resistenze da **220 Ω** oppure **330 Ω**
-- cavetti Dupont
-- alimentazione USB per ESP32
-- contenitore stampato in 3D opzionale
+- 1 × **GY-NEO6MV2 GPS module**
+- 1 × **TM1637 4-digit 0.36″ display**
+- 1 × **common-cathode RGB LED**
+- 3 × **220 Ω** or **330 Ω** resistors
+- Dupont wires
+- USB power for the ESP32
+- optional 3D-printed enclosure
 
-## Librerie da installare in Arduino IDE
-
-Per compilare il progetto sono necessarie queste librerie:
+## Libraries to install in the Arduino IDE
 
 - **TinyGPSPlus**
 - **TM1637Display**
 - **ArduinoJson**
 
-## Collegamenti elettrici
+## Wiring
 
-Scheda: **ESP32** (Dev Module). Pin verificati sullo sketch (`GPS_RX_PIN 16`, `GPS_TX_PIN 17`, `TM1637_CLK_PIN 18`, `TM1637_DIO_PIN 19`, `RGB_R/G/B_PIN 25/26/27`).
+Board: **ESP32** (Dev Module). Pins checked against the sketch (`GPS_RX_PIN 16`, `GPS_TX_PIN 17`, `TM1637_CLK_PIN 18`, `TM1637_DIO_PIN 19`, `RGB_R/G/B_PIN 25/26/27`).
 
-### Modulo GPS GY-NEO6MV2
+### GY-NEO6MV2 GPS module
 
 | GPS | ESP32 |
 |---|---|
@@ -65,7 +58,7 @@ Scheda: **ESP32** (Dev Module). Pin verificati sullo sketch (`GPS_RX_PIN 16`, `G
 | TX | GPIO16 (RX2) |
 | RX | GPIO17 (TX2) |
 
-### Display TM1637 4 cifre
+### TM1637 4-digit display
 
 | TM1637 | ESP32 |
 |---|---|
@@ -74,49 +67,50 @@ Scheda: **ESP32** (Dev Module). Pin verificati sullo sketch (`GPS_RX_PIN 16`, `G
 | CLK | GPIO18 |
 | DIO | GPIO19 |
 
-### LED RGB a catodo comune
+### Common-cathode RGB LED
 
-| LED RGB | ESP32 |
+| RGB LED | ESP32 |
 |---|---|
-| catodo comune | GND |
-| anodo rosso | resistenza 220–330 Ω → GPIO25 |
-| anodo verde | resistenza 220–330 Ω → GPIO26 |
-| anodo blu | resistenza 220–330 Ω → GPIO27 |
+| common cathode | GND |
+| red anode | 220–330 Ω resistor → GPIO25 |
+| green anode | 220–330 Ω resistor → GPIO26 |
+| blue anode | 220–330 Ω resistor → GPIO27 |
 
-- TX del GPS va su RX dell'ESP32 (GPIO16) e viceversa.
-- Il GPS ha bisogno di cielo libero per il primo fix (anche alcuni minuti a freddo).
+- The GPS TX goes to the ESP32 RX (GPIO16) and vice versa.
+- The GPS needs a clear view of the sky for the first fix (it can take a few minutes from a cold start).
 
-### Alimentazione
+### Power
 
-| Uso | Come alimentare |
+| Use | How to power it |
 |---|---|
-| Banco / casa | USB dell'ESP32 a 5 V |
-| Auto | adattatore USB da presa accendisigari (12 V → 5 V, almeno 1 A) collegato alla USB dell'ESP32 |
+| Bench / home | ESP32 USB port at 5 V |
+| Car | USB adapter in the cigarette-lighter socket (12 V → 5 V, at least 1 A) connected to the ESP32 USB |
 
-- GPS, display e LED prendono 5 V e GND dai pin **5V/VIN** e **GND** dell'ESP32: l'assorbimento totale resta sotto i 200 mA.
-- Il modulo GY-NEO6MV2 ha un regolatore a 3,3 V a bordo: va alimentato a 5 V e le linee TX/RX lavorano già a 3,3 V, compatibili con l'ESP32.
-- Monta il GPS con l'antenna rivolta verso il cielo (sotto il parabrezza va bene).
+- GPS, display and LED take 5 V and GND from the ESP32 **5V/VIN** and **GND** pins: total consumption stays below 200 mA.
+- The GY-NEO6MV2 module has an on-board 3.3 V regulator: power it from 5 V; its TX/RX lines already work at 3.3 V and are compatible with the ESP32.
+- Mount the GPS with the antenna facing the sky (under the windscreen is fine).
 
-## Contenuto del repository
+## Repository contents
 
-| Percorso | Descrizione |
+| Path | Description |
 |---|---|
-| `Tachimetro_GPS/Tachimetro_GPS.ino` | Sketch Arduino |
-| `immagini/` | Foto e immagini dell'articolo |
+| `GPS_Speedometer/GPS_Speedometer.ino` | Arduino sketch |
+| `images/` | Photos and images |
 
-## Come si usa
+## How to use it
 
-1. Apri [`Tachimetro_GPS/Tachimetro_GPS.ino`](Tachimetro_GPS/Tachimetro_GPS.ino) con Arduino IDE.
-2. Partition Scheme: una variante **No OTA** con filesystem grande; Flash Size in base alla scheda (di solito 4 MB).
-3. Collegamenti e configurazione sono descritti nell'articolo.
+1. Open [`GPS_Speedometer/GPS_Speedometer.ino`](GPS_Speedometer/GPS_Speedometer.ino) in the Arduino IDE.
+2. Partition Scheme: a **No OTA** variant with a large file system; Flash Size according to your board (usually 4 MB).
+3. Upload, connect to the Wi-Fi network **GPS-Speedometer** (password `12345678`, change it in `AP_PASS`) and open `http://192.168.4.1`.
+4. The time zone is set for Italy (`TZ_ITALY`); change the POSIX string for your country.
 
-Schema dei collegamenti, dettagli e risoluzione dei problemi: **[articolo su www.emgi.it](https://www.emgi.it/2026/04/10/tachimetro-gps-di-precisione/)**.
+Wiring diagram, details and troubleshooting: **[article on www.emgi.it](https://www.emgi.it/2026/04/10/tachimetro-gps-di-precisione/)** (in Italian).
 
-## Licenza
+## License
 
-- Codice e configurazioni: [MIT](LICENSE)
-- Modelli 3D, schemi e immagini: [CC BY-SA 4.0](https://creativecommons.org/licenses/by-sa/4.0/deed.it)
+- Code and configuration: [MIT](LICENSE)
+- 3D models, diagrams and images: [CC BY-SA 4.0](https://creativecommons.org/licenses/by-sa/4.0/)
 
 ---
 
-**Autore:** Massimiliano Sandrin – **[eMGi.it](https://www.emgi.it)** · Domande e commenti sotto l'[articolo sul sito](https://www.emgi.it/2026/04/10/tachimetro-gps-di-precisione/).
+**Author:** Massimiliano Sandrin – **[eMGi.it](https://www.emgi.it)** · Questions and comments below the [article on the website](https://www.emgi.it/2026/04/10/tachimetro-gps-di-precisione/).
