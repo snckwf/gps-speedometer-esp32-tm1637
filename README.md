@@ -5,7 +5,7 @@
 >
 > More electronics, Arduino, ESP32, Home Assistant and 3D printing projects at **[www.emgi.it](https://www.emgi.it)**
 
-![ESP32 GPS speedometer with TM1637, RGB LED and automatic day/night brightness](images/cover-3d.jpg)
+![ESP32 GPS speedometer with TM1637, RGB LED and automatic day/night brightness](images/cover-gps-speedometer-case-3d.png)
 
 Building a DIY GPS speedometer is a very interesting project because it combines electronics, programming, a web interface and 3D printing in one compact device. In this final version I built an **ESP32-based GPS speedometer** that shows the speed in real time on a **4-digit TM1637** display, keeps a **persistent history in flash**, serves a **polished web page over a Wi-Fi access point**, drives a **gradient RGB LED** whose colour changes with speed, and automatically adjusts **day/night brightness** based on sunrise and sunset calculated locally from the GPS position.
 
