@@ -114,3 +114,42 @@ Wiring diagram, details and troubleshooting: **[article on www.emgi.it](https://
 ---
 
 **Author:** Massimiliano Sandrin – **[eMGi.it](https://www.emgi.it)** · Questions and comments below the [article on the website](https://www.emgi.it/2026/04/10/tachimetro-gps-di-precisione/).
+
+## 3D-printed case (wedge "pebble" dashboard case)
+
+Soft-curved wedge case (86 x 64 x 32 mm + 3.2 mm lid) with the TM1637 display and the 5 mm RGB LED on the 15 degree tilted front panel. The GPS antenna sits under the thin lid, so no external antenna is needed. No mounting ears: fix it to the dashboard with VHB tape or Dual Lock.
+
+![Case](case_3d/images/case_iso.png)
+
+| File | Description |
+|---|---|
+| `case_3d/stl/tachimetro_base.stl` | Base, print on its bottom face, no supports |
+| `case_3d/stl/tachimetro_coperchio.stl` | Lid, already flipped (outer face on the bed), no supports |
+| `case_3d/step/case_tachimetro_gps.step` | STEP of the assembled case |
+| `case_3d/freecad/` | FreeCAD 1.1 document and the parametric generator script (`genera_case.py`, parameters at the top) |
+
+**Print settings:** PETG, nozzle 235 C, bed 80 C, 45 mm/s, 0.2 mm layers, 3 walls, 20% infill, no supports.
+
+**Parts and dimensions used by the case**
+
+| Part | Size |
+|---|---|
+| ESP32 DevKit (30 pin, USB-C, no soldered headers) | 51 x 28 mm, 4 mounting holes 47.4 x 23.8 mm |
+| TM1637 0.36" 4-digit display module | PCB 45 x 23 mm, total height 9 mm, digits 30 x 14 mm |
+| GY-GPSV3-NEO (NEO-6M) | board 36 x 26 mm + separate ceramic antenna 25 x 25 mm |
+| LED | 5 mm RGB, common cathode |
+
+**Assembly**
+1. Screw the ESP32 on its 4 standoffs with M2.5 x 6 self-tapping screws. The USB-C connector comes out of the hole in the left wall.
+2. Slide the TM1637 module into the two guides behind the front window.
+3. Push the 5 mm RGB LED into the front hole and solder the wires.
+4. Slide the GPS board and the antenna into the rails under the lid (from the right side) and fix them with tape or a drop of hot glue.
+5. Close the lid with 4 screws (pilot hole 2.6 mm, through hole 3.4 mm).
+
+**Wiring used by the sketch**
+
+| Signal | ESP32 pin |
+|---|---|
+| GPS RX / TX | GPIO16 / GPIO17 (UART2) |
+| TM1637 CLK / DIO | GPIO18 / GPIO19 |
+| RGB LED R / G / B | GPIO25 / GPIO26 / GPIO27 |
