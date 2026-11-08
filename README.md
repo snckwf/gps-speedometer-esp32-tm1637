@@ -117,6 +117,8 @@ Wiring diagram, details and troubleshooting: **[article on www.emgi.it](https://
 
 ## 3D-printed case (wedge "pebble" dashboard case)
 
+*Last modified: 08/11/2026*
+
 Soft-curved wedge case (86 x 64 x 32 mm + 3.2 mm lid) with the TM1637 display and the 5 mm RGB LED on the 15 degree tilted front panel. The GPS antenna sits under the thin lid, so no external antenna is needed. No mounting ears: fix it to the dashboard with VHB tape or Dual Lock.
 
 ![Case](case_3d/images/case_iso.png)

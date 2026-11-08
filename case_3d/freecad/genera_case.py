@@ -20,7 +20,7 @@ esp_l, esp_w, esp_h = 51.0, 28.0, 3.0   # ESP32 DevKit 30 pin USB-C (HW-394) 51 
 esp_x, esp_y = 3.0, 21.0               # scheda contro la parete sinistra: la USB-C esce dal foro nella parete
 usb_w, usb_h = 12.0, 8.0
 esp_hole_x, esp_hole_y = 47.4, 23.8        # interasse fori di fissaggio della scheda
-esp_post_r = 3.0; esp_pilot_d = 2.1        # colonnine d6, foro pilota per viti M2,5 autofilettanti
+esp_post_rb = 4.6; esp_post_r = 3.0; esp_pilot_d = 2.1        # colonnine d6, foro pilota per viti M2,5 autofilettanti
 # --- GY-GPSV3-NEO: scheda 36x26 + antenna ceramica 25x25 separata ---
 pcbg_l, pcbg_w, pcbg_t = 36.0, 26.0, 5.5
 ant_l, ant_w, ant_t = 25.0, 25.0, 7.0   # spessore antenna: misura con il calibro
@@ -30,8 +30,9 @@ lip_gps = 2.0; lip_t = 2.4              # labbri che reggono scheda e antenna
 # --- TM1637 0.36" 4 cifre (misurato: PCB 45x23, corpo display 30x14, spessore totale 9) ---
 pcb_w, pcb_h = 45.0, 23.0
 mod_tot = 9.0
-mod_x = 13.5; mod_z0 = 6.6
-disp_cx = 20.1; disp_dz = -2.2          # centro cifre dal lato sinistro del PCB (opposto ai fili) e scarto in basso
+mod_x = 13.5; mod_z0 = 6.6          # modulo TM1637 in posizione originale (urta il pilone del coperchio se spostato); finestra spostata con win_dx. a destra (vista frontale) il 08/11/2026
+win_dx = 12.0                           # finestra/cornice: posizione originale (disp_cx 20,1 = 14,1+6) + 6 mm a destra (vista frontale), 08/11/2026
+disp_cx = 14.1; disp_dz = -2.2          # centro cifre dal lato sinistro del PCB (opposto ai fili) e scarto in basso
 win_w, win_h = 29.6, 12.4               # finestra sulle cifre
 lip = 1.8; lw = 1.2; pad = 5.0          # guide del PCB display
 bezel_b = 4.0; bezel_h = 2.0; bezel_r = 7.5
@@ -99,7 +100,7 @@ for sx in (-1, 1):
     for sy in (-1, 1):
         hx = cxb + sx*esp_hole_x/2; hy = cyb + sy*esp_hole_y/2
         z0p = floor_t - 0.5; hp_ = z_post - z0p
-        adds.append(Part.makeCylinder(esp_post_r, hp_, V(hx, hy, z0p)))
+        adds.append(Part.makeCone(esp_post_rb, esp_post_r, hp_, V(hx, hy, z0p)))   # cono troncato: base larga, punta d6
         cuts.append(Part.makeCylinder(esp_pilot_d/2, z_post-0.8, V(hx, hy, 0.8)))
         if sx < 0:   # costola verso la parete sinistra
             adds.append(bx(hx-(wall-0.3), 3.0, hp_, wall-0.3, hy-1.5, z0p).common(base_solid))
@@ -108,7 +109,7 @@ for sx in (-1, 1):
 
 # ================= PANNELLO FRONTALE (coordinate locali, poi inclinato) =================
 wz = mod_z0 + pcb_h/2 + disp_dz
-wx = mod_x + disp_cx
+wx = mod_x + disp_cx + win_dx
 slot_d = mod_tot + 0.3
 fa = []; fc = []
 bw = win_w + 2*bezel_b; bh = win_h + 2*bezel_b
