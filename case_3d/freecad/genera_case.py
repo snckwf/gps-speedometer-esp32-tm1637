@@ -8,7 +8,7 @@ from FreeCAD import Vector as V
 
 # ================= PARAMETRI (mm) =================
 wall = 2.0; floor_t = 2.0; lid_t = 3.2
-ox = 86.0; oy = 64.0; H = 32.0          # esterno: larghezza X, profondita' Y, altezza base (coperchio escluso)
+ox = 86.0; oy = 64.0; H = 38.0          # (alzato di 6 mm il 10/11/2026 per i Dupont) esterno: larghezza X, profondita' Y, altezza base (coperchio escluso)
 tilt = 15.0                             # inclinazione pannello frontale (gradi verso dietro)
 R = 12.0                                # raggio grande degli angoli in pianta
 r_top = 2.2; r_bot = 1.5                # raccordi bordo superiore / inferiore
@@ -165,8 +165,8 @@ def vents(plane, a0, a1, z0, z1):
             u += vent_pitch
         z += pv; row += 1
     return out
-cuts += vents("x", 26, 50, 9, 28)
-cuts += vents("y", 16, 70, 9, 28)
+cuts += vents("x", 26, 50, 9, H-4)
+cuts += vents("y", 16, 70, 9, H-4)
 
 base = shell.multiFuse(adds)
 base = base.cut(fuse(cuts))
@@ -208,12 +208,13 @@ for x in px_list:
         lt.append(Part.makeCylinder(screw_d/2, lid_t+4, V(x, y, H-2)))
         lt.append(Part.makeCone(screw_d/2, 3.0, 1.5, V(x, y, zt-1.5)))
 gcx = x_a + al/2; gcy = gps_y + gw/2
-for r1, r2 in ((3, 4.2), (7, 8.2), (11, 12.2)):
-    ro = Part.makeCylinder(r2, engrave+1, V(gcx, gcy, zt-engrave))
-    ri = Part.makeCylinder(r1, engrave+1, V(gcx, gcy, zt-engrave))
+engrave_lid = 1.0                       # profondita' solchi sul coperchio (10/11/2026: prima 0,6 e troppo sottili)
+for r1, r2 in ((3, 5), (7.5, 9.5), (12, 14)):   # solchi larghi 2 mm (5 linee da 0,4)
+    ro = Part.makeCylinder(r2, engrave_lid+1, V(gcx, gcy, zt-engrave_lid))
+    ri = Part.makeCylinder(r1, engrave_lid+1, V(gcx, gcy, zt-engrave_lid))
     lt.append(ro.cut(ri))
-lt.append(bx(26, 0.8, engrave+1, gcx-13, gcy-0.4, zt-engrave))
-lt.append(bx(0.8, 26, engrave+1, gcx-0.4, gcy-13, zt-engrave))
+lt.append(bx(28, 1.6, engrave_lid+1, gcx-14, gcy-0.8, zt-engrave_lid))
+lt.append(bx(1.6, 28, engrave_lid+1, gcx-0.8, gcy-14, zt-engrave_lid))
 lid = lid.cut(fuse(lt))
 try: lid = lid.removeSplitter()
 except Exception: pass
