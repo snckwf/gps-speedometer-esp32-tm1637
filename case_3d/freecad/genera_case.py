@@ -8,7 +8,7 @@ from FreeCAD import Vector as V
 
 # ================= PARAMETRI (mm) =================
 wall = 2.0; floor_t = 2.0; lid_t = 3.2
-ox = 86.0; oy = 64.0; H = 38.0          # (alzato di 6 mm il 10/11/2026 per i Dupont) esterno: larghezza X, profondita' Y, altezza base (coperchio escluso)
+ox = 86.0; oy = 64.0; H = 42.0          # (alzato di 6 mm il 10/11/2026 e di altri 4 mm l'11/11/2026 per i Dupont) esterno: larghezza X, profondita' Y, altezza base (coperchio escluso)
 tilt = 15.0                             # inclinazione pannello frontale (gradi verso dietro)
 R = 12.0                                # raggio grande degli angoli in pianta
 r_top = 2.2; r_bot = 1.5                # raccordi bordo superiore / inferiore
@@ -16,7 +16,7 @@ post_r = 4.6; post_emb = 1.2            # colonne viti coperchio: raggio, e quan
 pilot_d = 2.6; screw_d = 3.4
 clr = 0.3
 # --- ESP32 DevKit (misurato 51 x 28) ---
-esp_l, esp_w, esp_h = 51.0, 28.0, 3.0   # ESP32 DevKit 30 pin USB-C (HW-394) 51 x 28; esp_h = PCB dal fondo: senza pin (fili saldati) = 3
+esp_l, esp_w, esp_h = 51.0, 28.0, 7.0   # (supporti alzati di 4 mm l'11/11/2026, prima 3.0) ESP32 DevKit 30 pin USB-C (HW-394) 51 x 28; esp_h = PCB dal fondo: senza pin (fili saldati) = 3
 esp_x, esp_y = 3.0, 21.0               # scheda contro la parete sinistra: la USB-C esce dal foro nella parete
 usb_w, usb_h = 12.0, 8.0
 esp_hole_x, esp_hole_y = 47.4, 23.8        # interasse fori di fissaggio della scheda
